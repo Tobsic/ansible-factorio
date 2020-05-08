@@ -1,0 +1,18 @@
+---
+# Create a json from a given data structure
+
+- name: ({{ service_name }}) Create {{ dest }} file
+  copy:
+    content: "{{ content | to_json }}"
+    dest: "{{ dest }}"
+  when: content
+  notify:
+    - Restart factorio service
+
+- name: ({{ service_name }}) Remove {{ dest }} file
+  file:
+    path: "{{ dest }}"
+    state: absent
+  when: not content
+  notify:
+    - Restart factorio service

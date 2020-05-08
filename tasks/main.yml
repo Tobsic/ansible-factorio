@@ -4,90 +4,97 @@
 - name: "{{ ansible_name_prefix }} Create OS group for factorio"
   group:
     name: "{{ service_group }}"
-    state: present
 
 - name: "{{ ansible_name_prefix }} Create OS user for factorio"
   user:
     name: "{{ service_user }}"
-    state: present
     group: "{{ service_group }}"
-
-- name: "{{ ansible_name_prefix }} Create OS group for factorio"
-  group:
-    name: "{{ service_group }}"
-    state: present
+    groups: ""
+    home: "{{ service_home }}"
+    system: yes
 
 # Download the factorio server version if needed
-- name: "{{ ansible_name_prefix }} Make factorio bin source folder"
+- name: "{{ ansible_name_prefix }} Create directories for downloaded files"
+  loop:
+    - "{{ server_sources }}"
+    - "{{ server_games }}/factorio-{{ server_version }}"
   file:
-    path: "{{ server_sources }}"
+    path: "{{ item }}"
     state: directory
-    mode: u+rwx
 
 - name: "{{ ansible_name_prefix }} Download factorio headless server from {{ download_url }}"
   get_url:
     url: "{{ download_url }}"
     dest: "{{ server_sources }}/factorio-{{ server_version }}.tar.gz"
     checksum: "{{ download_checksum }}"
+  register: download
 
-# Copy the factorio version to the production location
-- name: "{{ ansible_name_prefix }} Make factorio bin source folder"
-  file:
-    path: "{{ service_root }}"
-    state: directory
-    mode: u+rwx
-
-- name: "{{ ansible_name_prefix }} Extract Factorio headless server to {{ server_sources }}"
+- name: "{{ ansible_name_prefix }} Extract Factorio headless server to {{ server_games }}/factorio-{{ server_version }}"
   unarchive:
     src: "{{ server_sources }}/factorio-{{ server_version }}.tar.gz"
-    copy: no
-    dest: "{{ service_root }}"
-    creates: "{{ service_root }}/factorio"
+    remote_src: yes
+    dest: "{{ server_games }}/factorio-{{ server_version }}"
+    creates: "{{ server_games }}/factorio-{{ server_version }}/factorio"
 
-- name: "{{ ansible_name_prefix }} Make sure game save directory exists"
+- name: "{{ ansible_name_prefix }} Create var dir"
+  loop:
+    - "{{ service_root }}"
+    - "{{ service_root }}/saves"
   file:
-    path: "{{ service_root }}/factorio/saves"
-    state: directory
-    mode: u+rwx
-
-# Create the various settings files
-- name: "{{ ansible_name_prefix }} Set server settings"
-  include: set-server-settings.yml
-
-- name: "{{ ansible_name_prefix }} Set server whitelist"
-  include: set-server-whitelist.yml
-
-- name: "{{ ansible_name_prefix }} Set map gen settings"
-  include: set-map-gen-settings.yml
-
-- name: "{{ ansible_name_prefix }} Set map settings"
-  include: set-map-settings.yml
-
-# Create the save if one doesn't already exist
-- name: "{{ ansible_name_prefix }} Create default save file"
-  command: "{{ service_root }}/factorio/bin/x64/factorio --create {{ factorio_target_save }}"
-  args:
-    creates: "{{ factorio_target_save }}"
-
-# Set the permissions so only the user has access
-- name: "{{ ansible_name_prefix }} Make {{ service_root }} owned by {{ service_user }}"
-  file:
-    path: "{{ service_root }}"
+    path: "{{ item }}"
     state: directory
     owner: "{{ service_user }}"
     group: "{{ service_group }}"
-    recurse: yes
+
+# Create config files
+- name: "{{ ansible_name_prefix }} Create config files"
+  become: yes
+  become_user: "{{ service_user }}"
+  template:
+    src: templates/config.ini.j2
+    dest: "{{ service_root }}/config.ini"
+
+# Create the various settings files
+- name: "{{ ansible_name_prefix }} Create config files"
+  become: yes
+  become_user: "{{ service_user }}"
+  loop:
+    - content: "{{ default_factorio_server_settings | combine(factorio_server_settings) }}"
+      file: "server-settings.json"
+    - content: "{{ factorio_server_whitelist }}"
+      file: "server-whitelist.json"
+    - content: "{{ factorio_map_gen_settings }}"
+      file: "map-gen-settings.json"
+    - content: "{{ factorio_map_settings }}"
+      file: "map-settings.json"
+    - content: "{{ factorio_server_banlist }}"
+      file: banlist.json
+    - content: "{{ factorio_server_adminlist }}"
+      file: adminlist.json
+  vars:
+    content: "{{ item.content }}"
+    dest: "{{ service_root }}/{{ item.file }}"
+  include: json-file.yml
+
+# Create the save if one doesn't already exist
+- name: "{{ ansible_name_prefix }} Create default save file"
+  become: yes
+  become_user: "{{ service_user }}"
+  command:
+    cmd: "{{ server_games }}/factorio-{{ server_version }}/factorio//bin/x64/factorio --create {{ factorio_target_save }} --config {{ service_root }}/config.ini"
+    chdir: "{{ service_root }}"
+    creates: "{{ factorio_target_save }}"
 
 # Create the service
 - name: "{{ ansible_name_prefix }} Create service file"
   template:
     src: service-template.service.j2
-    dest: /etc/systemd/system/{{ service_name }}.service
+    dest: "/etc/systemd/system/{{ service_name }}.service"
     mode: "u=rwx,g=r,o=r"
   vars:
-    bin: "{{ service_root }}/factorio/bin/x64/factorio"
+    bin: "{{ server_games }}/factorio-{{ server_version }}/factorio/bin/x64/factorio"
     save: "{{ factorio_target_save }}"
     description: "Factorio {{ server_version }} {{ service_name }}"
   notify:
-  - Reload factorio server (daemon_reload)
-  - Restart factorio service
+    - Reload factorio server (daemon_reload)
+    - Restart factorio service

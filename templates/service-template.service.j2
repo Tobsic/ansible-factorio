@@ -1,10 +1,22 @@
 [Unit]
 Description={{ description }}
+After=network.target
 
 [Service]
-ExecStart={{ bin }} --start-server {{ save }} --port {{ service_port }} --server-settings {{ service_root }}/factorio/data/server-settings.json
 User={{ service_user }}
 Group={{ service_group }}
+PIDFile={{ service_root }}/server.pid
+WorkingDirectory={{ service_root }}
+ExecStart={{ bin }} \
+  --start-server {{ save }} \
+  --port {{ service_port }} \
+  --config {{ service_root }}/config.ini \
+  --server-settings {{ service_root }}/server-settings.json \
+  {% if factorio_server_whitelist %} --server-whitelist {{ service_root }}/whitelist{% endif %} \
+  {% if factorio_server_banlist %} --server-banlist {{ service_root }}/banlist{% endif %} \
+  {% if factorio_server_adminlist %}--server-adminlist {{ service_root }}/adminlist{% endif %} \
+  --console-log {{ service_root }}/log \
+  --server-id {{ service_root }}/server-id
 
 [Install]
 WantedBy=multi-user.target

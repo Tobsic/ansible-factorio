@@ -1,27 +1,24 @@
 ---
 # defaults file for factorio
 server_version: "0.17.79"
-server_sources: "/opt/games/sources/factorio"
+server_version_name: "factorio-{{ server_version }}"
+server_games: "/opt/games"
+server_sources: "{{ server_games }}/sources"
 download_url: "https://www.factorio.com/get-download/{{ server_version }}/headless/linux64"
 download_checksum: "sha256:9ace12fa986df028dc1851bf4de2cb038044d743e98823bc1c48ba21aa4d23df"
 
 # Configs for the service running the server
-service_name: "factorio-server"
 service_user: "factorio"
 service_group: "factorio"
-service_root: "/home/{{ service_user }}"
+service_home: "/home/{{ service_user }}"
+service_name: "factorio"
+service_root: "/var/games/{{ service_name }}"
 service_port: 34197
 service_restart_permitted: true
-factorio_default_save: "{{ service_root }}/factorio/saves/default-save.zip"
+factorio_default_save: "{{ service_root }}/saves/default-save.zip"
 factorio_target_save: "{{ factorio_default_save }}"
 
-# Configs for the factorio server. These examples were copied from
-# server-settings.example.json and are saved in server-settings.json
-factorio_server_settings: {}
 
-# Do not define server settings in this dictionary. This dictionary allows you
-# to overwrite a single setting without requiring you to provide other defaults.
-# See the documentation for more information.
 default_factorio_server_settings:
   name: "Name of the game as it will appear in the game listing"
   description: "Description of the game that will appear in the listing"
@@ -29,16 +26,11 @@ default_factorio_server_settings:
     public: false
     lan: true
 
-# server-whitelist.json settings
-factorio_server_whitelist_enabled: false
-#factorio_server_whitelist: []
-
-# map-gen-settings.json settings
-factorio_map_gen_settings_enabled: false
-#factorio_map_gen_settings: {}
-
-# map-settings.json settings
-factorio_map_settings_enabled: false
-#factorio_map_settings: {}
+factorio_server_settings: {}
+factorio_server_whitelist: []
+factorio_map_gen_settings: {}
+factorio_map_settings: {}
+factorio_server_banlist: []
+factorio_server_adminlist: []
 
 ansible_name_prefix: "({{ service_name }})"
