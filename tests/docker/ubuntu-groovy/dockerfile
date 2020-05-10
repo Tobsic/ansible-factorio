@@ -1,0 +1,7 @@
+FROM ubuntu:groovy
+RUN apt-get update
+RUN apt-get install -y ansible
+COPY . /etc/ansible/roles/ansible-factorio/
+COPY tests/inventory /etc/ansible/hosts
+COPY tests/test.yml /root/
+CMD ansible-playbook ~/test.yml -c local

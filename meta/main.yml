@@ -24,15 +24,19 @@ galaxy_info:
   platforms:
    - name: EL
      versions:
-      - 7
+       - 8
    - name: Ubuntu
      versions:
-      - trusty
-      - xenial
-      # - zesty
-  #  - name: Debain
-  #    versions:
-  #     - jessie
+       - bionic
+       - eoan
+       - groovy
+       - trusty
+       - xenial
+   - name: Debian
+     versions:
+       - buster
+       - jessie
+       - stretch
 
   galaxy_tags:
     - factorio

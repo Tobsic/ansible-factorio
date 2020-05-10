@@ -1,12 +1,12 @@
 version: '2'
 services:
-  centos-7:
+  centos-8:
     build:
       context: ../.
-      dockerfile: tests/docker/centos-7/dockerfile
+      dockerfile: tests/docker/centos-8/dockerfile
     extra_hosts:
-     - "mock.factorio.local:172.17.0.1"
-    image: ansible-centos-7
+      - "mock.factorio.local:172.17.0.1"
+    image: ansible-centos-8
     privileged: true
   debian-jessie:
     build:
@@ -15,6 +15,22 @@ services:
     extra_hosts:
      - "mock.factorio.local:172.17.0.1"
     image: ansible-debian-jessie
+    privileged: true
+  debian-stretch:
+    build:
+      context: ../.
+      dockerfile: tests/docker/debian-stretch/dockerfile
+    extra_hosts:
+     - "mock.factorio.local:172.17.0.1"
+    image: ansible-debian-stretch
+    privileged: true
+  debian-buster:
+    build:
+      context: ../.
+      dockerfile: tests/docker/debian-buster/dockerfile
+    extra_hosts:
+     - "mock.factorio.local:172.17.0.1"
+    image: ansible-debian-buster
     privileged: true
   ubuntu-trusty:
     build:
@@ -32,11 +48,27 @@ services:
      - "mock.factorio.local:172.17.0.1"
     image: ansible-ubuntu-xenial
     privileged: true
-  ubuntu-zesty:
+  ubuntu-bionic:
     build:
       context: ../.
-      dockerfile: tests/docker/ubuntu-zesty/dockerfile
+      dockerfile: tests/docker/ubuntu-bionic/dockerfile
     extra_hosts:
      - "mock.factorio.local:172.17.0.1"
-    image: ansible-ubuntu-zesty
+    image: ansible-ubuntu-bionic
+    privileged: true
+  ubuntu-eoan:
+    build:
+      context: ../.
+      dockerfile: tests/docker/ubuntu-eoan/dockerfile
+    extra_hosts:
+     - "mock.factorio.local:172.17.0.1"
+    image: ansible-ubuntu-eoan
+    privileged: true
+  ubuntu-groovy:
+    build:
+      context: ../.
+      dockerfile: tests/docker/ubuntu-groovy/dockerfile
+    extra_hosts:
+     - "mock.factorio.local:172.17.0.1"
+    image: ansible-ubuntu-groovy
     privileged: true

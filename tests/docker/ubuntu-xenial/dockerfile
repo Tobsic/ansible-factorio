@@ -2,7 +2,8 @@ FROM ubuntu:xenial
 RUN echo "deb http://ppa.launchpad.net/ansible/ansible/ubuntu xenial main" >> /etc/apt/sources.list
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 93C4A3FD7BB9C367
 RUN apt-get update
-RUN apt-get install -y ansible
-COPY . /etc/ansible/roles/factorio-test/
+RUN apt-get install -y ansible xz-utils
+COPY . /etc/ansible/roles/ansible-factorio/
+COPY tests/inventory /etc/ansible/hosts
 COPY tests/test.yml /root/
 CMD ansible-playbook ~/test.yml -c local

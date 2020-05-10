@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-VERSIONS=(0.15.5 0.14.23 0.13.20 0.12.35)
+#VERSIONS=(0.15.5 0.14.23 0.13.20 0.12.35)
+VERSIONS=(0.17.79 0.17.74 0.16.51 0.15.40 0.14.23 0.13.20 0.12.35)
+
 
 mkdir -p vendor
 for VERSION in "${VERSIONS[@]}"
