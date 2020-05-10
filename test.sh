@@ -13,14 +13,16 @@ if [ $? -eq 0 ]; then
 fi
 
 # Background service start
-(cd vendor/mock.factorio.com; python -m SimpleHTTPServer $PORTNUM) &
+pushd vendor/mock.factorio.com || exit 1
+python2 -m SimpleHTTPServer $PORTNUM &
 MOCKHOSTPID=$!
 echo $MOCKHOSTPID
+popd || exit 1
 
 # Exit cleanup registration
 function cleanup {
   echo "Killing SimpleHTTPServer with PID $MOCKHOSTPID"
-  kill "${MOCKHOSTPID}"
+  kill -9 "${MOCKHOSTPID}"
 }
 trap cleanup EXIT
 
