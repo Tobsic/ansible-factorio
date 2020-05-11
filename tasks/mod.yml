@@ -1,0 +1,34 @@
+---
+
+- name: " {{ ansible_name_prefix }} <{{ mod_name }} @ {{ mod_version }}> Get mod information"
+  uri:
+    url: "{{ mods_url }}/api/mods/{{ mod_name }}/full"
+  register: mod_info
+
+- name: " {{ ansible_name_prefix }} <{{ mod_name }} @ {{ mod_version }}> Get release information"
+  set_fact:
+    release_info: "{{ mod_info.json['releases'] | selectattr('version', 'eq', mod_version) | first }}"
+  ignore_errors: yes
+  register: select_release
+
+- name: " {{ ansible_name_prefix }} <{{ mod_name }} @ {{ mod_version }}> Fail if release is not existing"
+  when: select_release.failed
+  fail:
+    msg: "Unknown mod version: {{ mod_name }} {{ mod_version }}"
+
+- name: "{{ ansible_name_prefix }} <{{ mod_name }} @ {{ mod_version }}> Download mod from {{ mods_url }}{{ release_info['download_url'] }}"
+  vars:
+    username: "{{ factorio_username | urlencode }}"
+    token: "{{ factorio_token | default(auth_info.json.0, true) | urlencode }}" # default to auth_info.token, also for empty string
+  get_url:
+    url: "{{ mods_url }}{{ release_info['download_url'] }}?username={{ username }}&token={{ token }}"
+    checksum: "sha1:{{ release_info.sha1 }}"
+    dest: "{{ mod_download_path }}"
+
+- name: "{{ ansible_name_prefix }} <{{ mod_name }} @ {{ mod_version }}> Copy mod to {{ service_root }}/mods"
+  become: yes
+  become_user: "{{ service_user }}"
+  copy:
+    remote_src: yes
+    src: "{{ mod_download_path }}"
+    dest: "{{ mod_install_path }}"

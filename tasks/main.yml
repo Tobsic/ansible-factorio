@@ -76,6 +76,10 @@
     dest: "{{ service_root }}/{{ item.file }}"
   include: json-file.yml
 
+- include: mods.yml
+  notify:
+    - Restart factorio service
+
 # Create the save if one doesn't already exist
 - name: "{{ ansible_name_prefix }} Create default save file"
   become: yes

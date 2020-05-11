@@ -26,11 +26,22 @@ default_factorio_server_settings:
     public: false
     lan: true
 
-factorio_server_settings: {}
+factorio_username: ''
+factorio_password: ''
+factorio_token: ''
+factorio_server_settings:
+  username: "{{ factorio_username }}"
+  password: "{{ factorio_password }}"
+  token: "{{ factorio_token }}"
 factorio_server_whitelist: []
 factorio_map_gen_settings: {}
 factorio_map_settings: {}
 factorio_server_banlist: []
 factorio_server_adminlist: []
+
+auth_url: https://auth.factorio.com/api-login
+mods_url: https://mods.factorio.com
+mods_download_path: "{{ server_sources }}/factorio-mods"
+factorio_mods: {}
 
 ansible_name_prefix: "({{ service_name }})"

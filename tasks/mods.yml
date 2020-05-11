@@ -1,0 +1,64 @@
+---
+
+- name: "{{ ansible_name_prefix }} < {{ mod_name }} @ {{ mod_version }}> Fail if missing credentials"
+  fail:
+    msg: If you want to use mods, you need to specify a user name (factorio_username) and a user password (factorio_password) or token (factorio_token)
+  when: factorio_mods and (not factorio_username or not (factorio_password or factorio_token))
+
+- name: "{{ ansible_name_prefix }} Retrieve Token"
+  when: factorio_mods and not factorio_token
+  uri:
+    method: POST
+    body_format: form-urlencoded
+    body:
+      username: "{{ factorio_username }}"
+      password: "{{ factorio_password }}"
+    url: "{{ auth_url }}"
+  register: auth_info
+
+- name: "{{ ansible_name_prefix }} Create {{ service_root }}/mods"
+  become: yes
+  become_user: "{{ service_user }}"
+  file:
+    path: "{{ service_root }}/mods"
+    state: directory
+
+- name: "{{ ansible_name_prefix }} List installed mods"
+  find:
+    path: "{{ service_root }}/mods"
+    pattern: "*.zip"
+  register: mods_installed
+
+- name: "{{ ansible_name_prefix }} Remove installed mods"
+  vars:
+    requested_mods: "{{ factorio_mods.keys() | zip_longest(factorio_mods.values()) | map('join', '_') | zip_longest([], fillvalue='.zip') | map('join') | list }}"
+  loop: "{{ mods_installed.files }}"
+  when: "not item.path | basename in requested_mods"
+  file:
+    path: "{{ item.path }}"
+    state: absent
+
+- name: "{{ ansible_name_prefix }} Create {{ service_root }}/mods/mod-list.json"
+  become: yes
+  become_user: "{{ service_user }}"
+  vars:
+    content:
+      mods: "{{ ['base'] | union(factorio_mods.keys() | list) | zip_longest([], fillvalue='name') | zip_longest([], fillvalue=[True, 'enabled']) | map('items2dict', key_name=1, value_name=0) | list }}"
+  copy:
+    content: "{{ content }}"
+    dest: "{{ service_root }}/mods/mod-list.json"
+
+- name: "{{ ansible_name_prefix }} Make sure mod download directory exists"
+  file:
+    path: "{{ mods_download_path }}"
+    state: directory
+
+- name: "{{ ansible_name_prefix }} Install mod - {{ mod_name }} v{{ mod_version }}"
+  loop: "{{ factorio_mods | dict2items }}"
+  vars:
+    mod_name: "{{ item.key }}"
+    mod_version: "{{ item.value }}"
+    mod_download_path: "{{ mods_download_path }}/{{ mod_name }}_{{ mod_version }}.zip"
+    mod_install_path: "{{ service_root }}/mods/{{ mod_name }}_{{ mod_version }}.zip"
+  include: mod.yml
+
