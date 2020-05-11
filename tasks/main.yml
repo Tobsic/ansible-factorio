@@ -1,4 +1,5 @@
 ---
+
 # tasks file for factorio
 # Create the user and group to run the factorio server
 - name: "{{ ansible_name_prefix }} Create OS group for factorio"
@@ -85,7 +86,7 @@
   become: yes
   become_user: "{{ service_user }}"
   command:
-    cmd: "{{ server_games }}/factorio-{{ server_version }}/factorio//bin/x64/factorio --create {{ factorio_target_save }} --config {{ service_root }}/config.ini"
+    cmd: "{{ server_games }}/factorio-{{ server_version }}/factorio/bin/x64/factorio --create {{ factorio_target_save }} --config {{ service_root }}/config.ini"
     chdir: "{{ service_root }}"
     creates: "{{ factorio_target_save }}"
 

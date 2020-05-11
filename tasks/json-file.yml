@@ -5,7 +5,7 @@
   copy:
     content: "{{ content | to_json }}"
     dest: "{{ dest }}"
-  when: content
+  when: content | length > 0
   notify:
     - Restart factorio service
 
@@ -13,6 +13,6 @@
   file:
     path: "{{ dest }}"
     state: absent
-  when: not content
+  when: content | length == 0
   notify:
     - Restart factorio service
